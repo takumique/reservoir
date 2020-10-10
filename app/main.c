@@ -34,6 +34,11 @@ static inline void print_res_head(reservoir_t *res, char *label) {
 #endif
 }
 
+#define TRAIN_BATCH
+#ifdef TRAIN_BATCH
+#define BATCH_SIZE 10
+#endif
+
 int main(int argc, char** argv) {
   FILE *fp;
   memory_ops_t mem = {
@@ -41,7 +46,7 @@ int main(int argc, char** argv) {
       .memory_alloc = (void *(*)(unsigned)) malloc,
       .memory_free = (void (*)(void *)) free,
 #else
-      // TODO
+      // TODO: allocate static work memory here
 #endif
   };
   reservoir_t res = {
@@ -61,23 +66,30 @@ int main(int argc, char** argv) {
   }
   char buf[32];
   DATA_T training_data[960];
-  unsigned i;
-  for(i = 0; fgets(buf, sizeof(buf), fp); i++) {
+  unsigned n_data = 0;
+  for(unsigned i = 0; fgets(buf, sizeof(buf), fp); i++) {
 #ifdef SINGLE_PRECISION
     training_data[i] = strtof(buf, NULL);
 #else
     training_data[i] = strtod(buf, NULL);
 #endif
+    n_data++;
   }
-  i -= 1;
   fclose(fp);
   // train model
-  train(&res, training_data, i + 1);
+#ifdef TRAIN_BATCH
+  for(unsigned i = 0; i < n_data / BATCH_SIZE; i++) {
+    train_batch(&res, training_data + i * BATCH_SIZE, BATCH_SIZE);
+  }
+#else
+//  train(&res, training_data, n_data);
+  train_batch(&res, training_data, n_data);
+#endif
   print_res_head(&res, "TRAINED");
   // predict by pre-trained model and save to file
   fp = fopen("predicted.txt", "w");
-  DATA_T data = training_data[i];
-  for(i = 0; i < 640; i++) {
+  DATA_T data = training_data[n_data - 1];
+  for(unsigned i = 0; i < 640; i++) {
     predict(&res, &data, data);
     fprintf(fp, "%f\n", data);
   }
