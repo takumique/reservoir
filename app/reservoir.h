@@ -1,54 +1,41 @@
 #ifndef APP_RESERVOIR_H_
 #define APP_RESERVOIR_H_
 
-#include <inttypes.h>
+#define PRECISION_F32
+//#define PRECISION_F64
 
-#define SINGLE_PRECISION
+#include "mat.h"
 
-#ifdef SINGLE_PRECISION
-#define DATA_T float
-#define NODE_T float
-#define WEIGHT_T float
+#if defined(PRECISION_F32)
+#define VAL_T f32_t
+#define MAT_T mat_f32_t
+#define SPECTRAL_RADIUS_T float
+#elif defined(PRECISION_F64)
+#define VAL_T f64_t
+#define MAT_T mat_f64_t
+#define SPECTRAL_RADIUS_T double
 #else
-#define DATA_T double
-#define NODE_T double
-#define WEIGHT_T double
-#endif
-
-//#define STATIC_MEMORY
-
-#ifdef STATIC_MEMORY
-#define STATIC_MEMORY_OFFSET(BASE, TYPE, N) ((char *) BASE + sizeof(TYPE) * N)
+#error
 #endif
 
 typedef struct {
-#ifndef STATIC_MEMORY
-  void *(*memory_alloc)(unsigned);
-  void (*memory_free)(void *);
-#else
-  void *work;
-#endif
-} memory_ops_t;
-
-typedef struct {
-  memory_ops_t *mem;
+  mat_memory_t *mem;
   unsigned n_in_nodes;
   unsigned n_res_nodes;
   unsigned n_out_nodes;
   float leak_rate;
-  WEIGHT_T *in_weights;  // sizeof(WEIGHT_T) * n_in_nodes * n_res_nodes
-  NODE_T *res_nodes;     // sizeof(NODE_T) * n_res_nodes
-  WEIGHT_T *res_weights; // sizeof(WEIGHT_T) * n_res_nodes * n_res_nodes
-  WEIGHT_T *out_weights; // sizeof(WEIGHT_T) * n_res_nodes * n_out_nodes
-  NODE_T *x;             // (X X_T): sizeof(NODE_T) * res->n_res_nodes * res->n_res_nodes
-  NODE_T *y;           // (Y_TARGET X_T): sizeof(NODE_T) * res->n_in_nodes * res->n_res_nodes
-} reservoir_t;
+  MAT_T in_weights;  // sizeof(VAL_T) * n_in_nodes * n_res_nodes
+  MAT_T res_nodes;   // sizeof(VAL_T) * 1 * n_res_nodes
+  MAT_T res_weights; // sizeof(VAL_T) * n_res_nodes * n_res_nodes
+  MAT_T out_weights; // sizeof(VAL_T) * n_res_nodes * n_out_nodes
+  MAT_T x;           // (X X_T): sizeof(VAL_T) * res->n_res_nodes * res->n_res_nodes
+  MAT_T y;           // (Y_TARGET X_T): sizeof(VAL_T) * res->n_in_nodes * res->n_res_nodes
+} reservoir_t; // 84 bytes
 
 int init(reservoir_t *res);
 void deinit(reservoir_t *res);
 
-void train(reservoir_t *res, DATA_T *data, unsigned data_len);
-void train_batch(reservoir_t *res, DATA_T *data, unsigned data_len);
-void predict(reservoir_t *res, DATA_T *predicted, DATA_T data);
+void train(reservoir_t *res, MAT_T *data);
+void predict(reservoir_t *res, MAT_T *predicted, MAT_T *data);
 
 #endif /* APP_RESERVOIR_H_ */
