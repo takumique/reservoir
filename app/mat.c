@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define CHECK_ARGS
+#define CHECK_ARGS
 
 int mat_f32_new(mat_memory_t *mem, mat_f32_t *a, unsigned n, unsigned m) {
   a->t = 0;
@@ -137,23 +137,23 @@ int mat_f32_inv(mat_f32_t *inv_a, mat_f32_t *a) {
   if(inv_a->m != a->m) {
     return -1;
   }
-#endif
-  float temp;
-  unsigned n = inv_a->n;
-  if(n != inv_a->m || n != a->n || n != a->m) {
+  if(inv_a->n != inv_a->m) {
     return -1;
   }
+#endif
+  float temp;
+  inv_a->t = 0;
   mat_f32_identity(inv_a, 1.0f);
-  for(unsigned i = 0; i < n; i++) {
+  for(unsigned i = 0; i < inv_a->n; i++) {
     temp = 1.0f / *MAT(*a, i, i);
-    for(unsigned j = 0; j < n; j++) {
+    for(unsigned j = 0; j < inv_a->n; j++) {
       *MAT(*a, i, j) *= temp;
       *MAT(*inv_a, i, j) *= temp;
     }
-    for(unsigned j = 0; j < n; j++) {
+    for(unsigned j = 0; j < inv_a->n; j++) {
       if(i != j) {
         temp = *MAT(*a, j, i);
-        for(unsigned k = 0; k < n; k++) {
+        for(unsigned k = 0; k < inv_a->n; k++) {
           *MAT(*a, j, k) -= *MAT(*a, i, k) * temp;
           *MAT(*inv_a, j, k) -= *MAT(*inv_a, i, k) * temp;
         }
@@ -189,7 +189,7 @@ float mat_f32_max_abs_eigenval(mat_f32_t *a, mat_f32_t *x, mat_f32_t *y, unsigne
     return -1;
   }
 #endif
-  float lambda, prev_lambda = 0.0;
+  float lambda, prev_lambda = 0.0f;
   for(unsigned i = 0; i < a->n; i++) {
     *MAT(*x, 0, i) = 1.0f;
   }
@@ -208,7 +208,7 @@ float mat_f32_max_abs_eigenval(mat_f32_t *a, mat_f32_t *x, mat_f32_t *y, unsigne
     for(unsigned i = 0; i < a->n; i++){
       *MAT(*x, 0, i) = *MAT(*y, 0, i) / lambda;
     }
-    if(fabs(lambda - prev_lambda) < 10e-6) {
+    if(fabs(lambda - prev_lambda) < 10e-6f) {
       break;
     }
     prev_lambda = lambda;
@@ -347,23 +347,23 @@ int mat_f64_inv(mat_f64_t *inv_a, mat_f64_t *a) {
   if(inv_a->m != a->m) {
     return -1;
   }
-#endif
-  double temp;
-  unsigned n = inv_a->n;
-  if(n != inv_a->m || n != a->n || n != a->m) {
+  if(inv_a->n != inv_a->m) {
     return -1;
   }
+#endif
+  double temp;
+  inv_a->t = 0;
   mat_f64_identity(inv_a, 1.0f);
-  for(unsigned i = 0; i < n; i++) {
+  for(unsigned i = 0; i < inv_a->n; i++) {
     temp = 1.0f / *MAT(*a, i, i);
-    for(unsigned j = 0; j < n; j++) {
+    for(unsigned j = 0; j < inv_a->n; j++) {
       *MAT(*a, i, j) *= temp;
       *MAT(*inv_a, i, j) *= temp;
     }
-    for(unsigned j = 0; j < n; j++) {
+    for(unsigned j = 0; j < inv_a->n; j++) {
       if(i != j) {
         temp = *MAT(*a, j, i);
-        for(unsigned k = 0; k < n; k++) {
+        for(unsigned k = 0; k < inv_a->n; k++) {
           *MAT(*a, j, k) -= *MAT(*a, i, k) * temp;
           *MAT(*inv_a, j, k) -= *MAT(*inv_a, i, k) * temp;
         }
@@ -401,7 +401,7 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #endif
   double lambda, prev_lambda = 0.0;
   for(unsigned i = 0; i < a->n; i++) {
-    *MAT(*x, 0, i) = 1.0f;
+    *MAT(*x, 0, i) = 1.0;
   }
   for(unsigned iteration = 0; iteration < lim; iteration++) {
     for(unsigned i = 0; i < a->n; i++) {
