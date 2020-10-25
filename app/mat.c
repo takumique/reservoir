@@ -53,9 +53,44 @@ int mat_f32_sum(mat_f32_t *c, mat_f32_t *a, mat_f32_t *b) {
     return -1;
   }
 #endif
-  for(unsigned n = 0; n < c->n; n++) {
-    for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = *MAT(*a, n, m) + *MAT(*b, n, m);
+  for(;;) {
+    if(c->n == 1 || c->m == 1) {
+      for(unsigned i = 0; i < c->n * c->m; i++) {
+        *(c->data + i) = *(a->data + i) + *(b->data + i);
+      }
+      break;
+    }
+    if(!a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT(*a, n, m) + *_MAT(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT_T(*a, n, m) + *_MAT(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(!a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT(*a, n, m) + *_MAT_T(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT_T(*a, n, m) + *_MAT_T(*b, n, m);
+        }
+      }
+      break;
     }
   }
   return 0;
@@ -70,6 +105,7 @@ int mat_f32_add(mat_f32_t *c, mat_f32_t *a, float l) {
     return -1;
   }
 #endif
+  c->t = 0;
   for(unsigned i = 0; i < c->n * c->m; i++) {
     *(c->data + i) = *(a->data + i) + l;
   }
@@ -89,12 +125,50 @@ int mat_f32_product(mat_f32_t *c, mat_f32_t *a, mat_f32_t *b) {
   }
 #endif
   c->t = 0;
-  for(unsigned n = 0; n < c->n; n++) {
-    for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = 0;
-      for(unsigned p = 0; p < a->m; p++) {
-        *MAT(*c, n, m) += *MAT(*a, n, p) * *MAT(*b, p, m);
+  for(;;) {
+    if(!a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT(*a, n, p) * *_MAT(*b, p, m);
+          }
+        }
       }
+      break;
+    }
+    if(a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT_T(*a, n, p) * *_MAT(*b, p, m);
+          }
+        }
+      }
+      break;
+    }
+    if(!a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT(*a, n, p) * *_MAT_T(*b, p, m);
+          }
+        }
+      }
+      break;
+    }
+    if(a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT_T(*a, n, p) * *_MAT_T(*b, p, m);
+          }
+        }
+      }
+      break;
     }
   }
   return 0;
@@ -109,6 +183,7 @@ int mat_f32_mul(mat_f32_t *c, mat_f32_t *a, float l) {
     return -1;
   }
 #endif
+  c->t = 0;
   for(unsigned i = 0; i < c->n * c->m; i++) {
     *(c->data + i) = *(a->data + i) * l;
   }
@@ -124,7 +199,7 @@ int mat_f32_identity(mat_f32_t *c, f32_t l) {
   c->t = 0;
   mat_f32_zeros(c);
   for(unsigned i = 0; i < c->n; i++) {
-    *MAT(*c, i, i) = l;
+    *_MAT(*c, i, i) = l;
   }
   return 0;
 }
@@ -142,20 +217,38 @@ int mat_f32_inv(mat_f32_t *inv_a, mat_f32_t *a) {
   }
 #endif
   float temp;
-  inv_a->t = 0;
   mat_f32_identity(inv_a, 1.0f);
-  for(unsigned i = 0; i < inv_a->n; i++) {
-    temp = 1.0f / *MAT(*a, i, i);
-    for(unsigned j = 0; j < inv_a->n; j++) {
-      *MAT(*a, i, j) *= temp;
-      *MAT(*inv_a, i, j) *= temp;
+  if(a->t) {
+    for(unsigned i = 0; i < inv_a->n; i++) {
+      temp = 1.0f / *_MAT_T(*a, i, i);
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        *_MAT_T(*a, i, j) *= temp;
+        *_MAT(*inv_a, i, j) *= temp;
+      }
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        if(i != j) {
+          temp = *_MAT_T(*a, j, i);
+          for(unsigned k = 0; k < inv_a->n; k++) {
+            *_MAT_T(*a, j, k) -= *_MAT_T(*a, i, k) * temp;
+            *_MAT(*inv_a, j, k) -= *_MAT(*inv_a, i, k) * temp;
+          }
+        }
+      }
     }
-    for(unsigned j = 0; j < inv_a->n; j++) {
-      if(i != j) {
-        temp = *MAT(*a, j, i);
-        for(unsigned k = 0; k < inv_a->n; k++) {
-          *MAT(*a, j, k) -= *MAT(*a, i, k) * temp;
-          *MAT(*inv_a, j, k) -= *MAT(*inv_a, i, k) * temp;
+  } else {
+    for(unsigned i = 0; i < inv_a->n; i++) {
+      temp = 1.0f / *_MAT(*a, i, i);
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        *_MAT(*a, i, j) *= temp;
+        *_MAT(*inv_a, i, j) *= temp;
+      }
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        if(i != j) {
+          temp = *_MAT(*a, j, i);
+          for(unsigned k = 0; k < inv_a->n; k++) {
+            *_MAT(*a, j, k) -= *_MAT(*a, i, k) * temp;
+            *_MAT(*inv_a, j, k) -= *_MAT(*inv_a, i, k) * temp;
+          }
         }
       }
     }
@@ -172,7 +265,7 @@ void mat_f32_random_normal(mat_f32_t *c, float mu, float sigma) {
   c->t = 0;
   for(unsigned n = 0; n < c->n; n++) {
     for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = f32_random_normal(mu, sigma);
+      *_MAT(*c, n, m) = f32_random_normal(mu, sigma);
     }
   }
 }
@@ -191,22 +284,22 @@ float mat_f32_max_abs_eigenval(mat_f32_t *a, mat_f32_t *x, mat_f32_t *y, unsigne
 #endif
   float lambda, prev_lambda = 0.0f;
   for(unsigned i = 0; i < a->n; i++) {
-    *MAT(*x, 0, i) = 1.0f;
+    *_MAT(*x, 0, i) = 1.0f;
   }
   for(unsigned iteration = 0; iteration < lim; iteration++) {
     for(unsigned i = 0; i < a->n; i++) {
-      *MAT(*y, 0, i) = 0.0f;
+      *_MAT(*y, 0, i) = 0.0f;
       for(unsigned j = 0; j < a->n; j++) {
-        *MAT(*y, 0, i) += *MAT(*a, i, j) * *MAT(*x, 0, j);
+        *_MAT(*y, 0, i) += *_MAT(*a, i, j) * *_MAT(*x, 0, j);
       }
     }
     for(unsigned i = 0; i < a->n; i++){
-      if(fabs(*MAT(*y, 0, i)) > fabs(prev_lambda)) {
-        lambda = *MAT(*y, 0, i);
+      if(fabs(*_MAT(*y, 0, i)) > fabs(prev_lambda)) {
+        lambda = *_MAT(*y, 0, i);
       }
     }
     for(unsigned i = 0; i < a->n; i++){
-      *MAT(*x, 0, i) = *MAT(*y, 0, i) / lambda;
+      *_MAT(*x, 0, i) = *_MAT(*y, 0, i) / lambda;
     }
     if(fabs(lambda - prev_lambda) < 10e-6f) {
       break;
@@ -263,9 +356,44 @@ int mat_f64_sum(mat_f64_t *c, mat_f64_t *a, mat_f64_t *b) {
     return -1;
   }
 #endif
-  for(unsigned n = 0; n < c->n; n++) {
-    for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = *MAT(*a, n, m) + *MAT(*b, n, m);
+  for(;;) {
+    if(c->n == 1 || c->m == 1) {
+      for(unsigned i = 0; i < c->n * c->m; i++) {
+        *(c->data + i) = *(a->data + i) + *(b->data + i);
+      }
+      break;
+    }
+    if(!a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT(*a, n, m) + *_MAT(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT_T(*a, n, m) + *_MAT(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(!a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT(*a, n, m) + *_MAT_T(*b, n, m);
+        }
+      }
+      break;
+    }
+    if(a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = *_MAT_T(*a, n, m) + *_MAT_T(*b, n, m);
+        }
+      }
+      break;
     }
   }
   return 0;
@@ -299,12 +427,50 @@ int mat_f64_product(mat_f64_t *c, mat_f64_t *a, mat_f64_t *b) {
   }
 #endif
   c->t = 0;
-  for(unsigned n = 0; n < c->n; n++) {
-    for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = 0;
-      for(unsigned p = 0; p < a->m; p++) {
-        *MAT(*c, n, m) += *MAT(*a, n, p) * *MAT(*b, p, m);
+  for(;;) {
+    if(!a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT(*a, n, p) * *_MAT(*b, p, m);
+          }
+        }
       }
+      break;
+    }
+    if(a->t && !b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT_T(*a, n, p) * *_MAT(*b, p, m);
+          }
+        }
+      }
+      break;
+    }
+    if(!a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT(*a, n, p) * *_MAT_T(*b, p, m);
+          }
+        }
+      }
+      break;
+    }
+    if(a->t && b->t) {
+      for(unsigned n = 0; n < c->n; n++) {
+        for(unsigned m = 0; m < c->m; m++) {
+          *_MAT(*c, n, m) = 0;
+          for(unsigned p = 0; p < a->m; p++) {
+            *_MAT(*c, n, m) += *_MAT_T(*a, n, p) * *_MAT_T(*b, p, m);
+          }
+        }
+      }
+      break;
     }
   }
   return 0;
@@ -334,7 +500,7 @@ int mat_f64_identity(mat_f64_t *c, double l) {
   c->t = 0;
   mat_f64_zeros(c);
   for(unsigned i = 0; i < c->n; i++) {
-    *MAT(*c, i, i) = l;
+    *_MAT(*c, i, i) = l;
   }
   return 0;
 }
@@ -352,20 +518,38 @@ int mat_f64_inv(mat_f64_t *inv_a, mat_f64_t *a) {
   }
 #endif
   double temp;
-  inv_a->t = 0;
   mat_f64_identity(inv_a, 1.0f);
-  for(unsigned i = 0; i < inv_a->n; i++) {
-    temp = 1.0f / *MAT(*a, i, i);
-    for(unsigned j = 0; j < inv_a->n; j++) {
-      *MAT(*a, i, j) *= temp;
-      *MAT(*inv_a, i, j) *= temp;
+  if(a->t) {
+    for(unsigned i = 0; i < inv_a->n; i++) {
+      temp = 1.0 / *_MAT_T(*a, i, i);
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        *_MAT_T(*a, i, j) *= temp;
+        *_MAT(*inv_a, i, j) *= temp;
+      }
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        if(i != j) {
+          temp = *_MAT_T(*a, j, i);
+          for(unsigned k = 0; k < inv_a->n; k++) {
+            *_MAT_T(*a, j, k) -= *_MAT_T(*a, i, k) * temp;
+            *_MAT(*inv_a, j, k) -= *_MAT(*inv_a, i, k) * temp;
+          }
+        }
+      }
     }
-    for(unsigned j = 0; j < inv_a->n; j++) {
-      if(i != j) {
-        temp = *MAT(*a, j, i);
-        for(unsigned k = 0; k < inv_a->n; k++) {
-          *MAT(*a, j, k) -= *MAT(*a, i, k) * temp;
-          *MAT(*inv_a, j, k) -= *MAT(*inv_a, i, k) * temp;
+  } else {
+    for(unsigned i = 0; i < inv_a->n; i++) {
+      temp = 1.0 / *_MAT(*a, i, i);
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        *_MAT(*a, i, j) *= temp;
+        *_MAT(*inv_a, i, j) *= temp;
+      }
+      for(unsigned j = 0; j < inv_a->n; j++) {
+        if(i != j) {
+          temp = *_MAT(*a, j, i);
+          for(unsigned k = 0; k < inv_a->n; k++) {
+            *_MAT(*a, j, k) -= *_MAT(*a, i, k) * temp;
+            *_MAT(*inv_a, j, k) -= *_MAT(*inv_a, i, k) * temp;
+          }
         }
       }
     }
@@ -382,7 +566,7 @@ void mat_f64_random_normal(mat_f64_t *c, double mu, double sigma) {
   c->t = 0;
   for(unsigned n = 0; n < c->n; n++) {
     for(unsigned m = 0; m < c->m; m++) {
-      *MAT(*c, n, m) = f64_random_normal(mu, sigma);
+      *_MAT(*c, n, m) = f64_random_normal(mu, sigma);
     }
   }
 }
@@ -401,22 +585,22 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #endif
   double lambda, prev_lambda = 0.0;
   for(unsigned i = 0; i < a->n; i++) {
-    *MAT(*x, 0, i) = 1.0;
+    *_MAT(*x, 0, i) = 1.0;
   }
   for(unsigned iteration = 0; iteration < lim; iteration++) {
     for(unsigned i = 0; i < a->n; i++) {
-      *MAT(*y, 0, i) = 0.0f;
+      *_MAT(*y, 0, i) = 0.0f;
       for(unsigned j = 0; j < a->n; j++) {
-        *MAT(*y, 0, i) += *MAT(*a, i, j) * *MAT(*x, 0, j);
+        *_MAT(*y, 0, i) += *_MAT(*a, i, j) * *_MAT(*x, 0, j);
       }
     }
     for(unsigned i = 0; i < a->n; i++){
-      if(fabs(*MAT(*y, 0, i)) > fabs(prev_lambda)) {
-        lambda = *MAT(*y, 0, i);
+      if(fabs(*_MAT(*y, 0, i)) > fabs(prev_lambda)) {
+        lambda = *_MAT(*y, 0, i);
       }
     }
     for(unsigned i = 0; i < a->n; i++){
-      *MAT(*x, 0, i) = *MAT(*y, 0, i) / lambda;
+      *_MAT(*x, 0, i) = *_MAT(*y, 0, i) / lambda;
     }
     if(fabs(lambda - prev_lambda) < 10e-6) {
       break;

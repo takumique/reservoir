@@ -79,18 +79,16 @@ int main(int argc, char** argv) {
   if(fp == NULL) {
     goto error;
   }
-  unsigned n_batch = 0;
   VAL_T data;
   for(unsigned i = 0; fgets(buf, sizeof(buf), fp);) {
     data = strtod(buf, NULL);
     *MAT(training_data, i, 0) = data;
     if(++i >= TRAINING_BATCH_SIZE) {
-      n_batch++;
-      train(&res, &training_data);
+      train_feed_data(&res, &training_data);
       i = 0;
     }
   }
-  printf("%d * batch train performed\n", n_batch);
+  train_compute_weight(&res, RESET_XY);
   fclose(fp);
   print_res_head(&res, "TRAINED");
   // predict + save

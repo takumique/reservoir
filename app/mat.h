@@ -77,7 +77,7 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #define RANDOM_NORMAL(...) f32_random_normal(__VA_ARGS__)
 #define MAT_RANDOM_NORMAL(...) mat_f32_random_normal(__VA_ARGS__)
 #define MAT_MAX_ABS_EIGENVAL(...) mat_f32_max_abs_eigenval(__VA_ARGS__)
-#elif defined(PRECISION_F32)
+#elif defined(PRECISION_F64)
 #define MAT_NEW(...) mat_f64_new(__VA_ARGS__)
 #define MAT_DESTROY(...) mat_f64_destroy(__VA_ARGS__)
 #define MAT_ZEROS(...) mat_f64_zeros(__VA_ARGS__)
