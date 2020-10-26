@@ -1,5 +1,5 @@
-#ifndef APP_MAT_H_
-#define APP_MAT_H_
+#ifndef APP_GENERIC_MAT_H_
+#define APP_GENERIC_MAT_H_
 
 typedef float f32_t;
 typedef double f64_t;
@@ -92,4 +92,4 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #define MAT_MAX_ABS_EIGENVAL(...) mat_f64_max_abs_eigenval(__VA_ARGS__)
 #endif
 
-#endif /* APP_MAT_H_ */
+#endif /* APP_GENERIC_MAT_H_ */

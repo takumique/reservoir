@@ -1,9 +1,6 @@
 #ifndef APP_RESERVOIR_H_
 #define APP_RESERVOIR_H_
 
-#define PRECISION_F32
-//#define PRECISION_F64
-
 #include "mat.h"
 
 #if defined(PRECISION_F32)
