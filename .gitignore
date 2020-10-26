@@ -125,4 +125,5 @@ local.properties
 # End of https://www.toptal.com/developers/gitignore/api/eclipse,c
 
 out.*/
+stm32_cubemx/*/build/
 
