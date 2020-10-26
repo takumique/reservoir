@@ -1,10 +1,8 @@
 #ifndef APP_GENERIC_MAT_H_
 #define APP_GENERIC_MAT_H_
 
-#include <arm_math.h>
-
-typedef float32_t f32_t;
-typedef float64_t f64_t;
+typedef float f32_t;
+typedef double f64_t;
 
 typedef struct {
   void *(*memory_alloc)(unsigned);
@@ -25,14 +23,6 @@ typedef struct {
   unsigned t;
 } mat_f64_t;
 
-#define T(A) \
-do { \
-  (A).t = !(A).t; \
-  unsigned _n = (A).n; \
-  (A).n = (A).m; \
-  (A).m = _n; \
-} while(0)
-
 #define _MAT(A, N, M) ((A).data + (A).m * N + M)
 #define _MAT_T(A, N, M) ((A).data + (A).n * M + N)
 #define MAT(A, N, M) ((A).t ? _MAT_T(A, N, M) : _MAT(A, N, M))
@@ -41,6 +31,7 @@ int mat_f32_new(mat_memory_t *mem, mat_f32_t *a, unsigned n, unsigned m);
 void mat_f32_destroy(mat_memory_t *mem, mat_f32_t *a);
 int mat_f32_copy(mat_f32_t *dst, mat_f32_t *src);
 int mat_f32_zeros(mat_f32_t *a);
+int mat_f32_transpose(mat_f32_t *at, mat_f32_t *a);
 int mat_f32_sum(mat_f32_t *c, mat_f32_t *a, mat_f32_t *b);
 int mat_f32_add(mat_f32_t *c, mat_f32_t *a, float l);
 int mat_f32_product(mat_f32_t *c, mat_f32_t *a, mat_f32_t *b);
@@ -55,6 +46,7 @@ int mat_f64_new(mat_memory_t *mem, mat_f64_t *a, unsigned n, unsigned m);
 void mat_f64_destroy(mat_memory_t *mem, mat_f64_t *a);
 int mat_f64_copy(mat_f64_t *dst, mat_f64_t *src);
 int mat_f64_zeros(mat_f64_t *a);
+int mat_f64_transpose(mat_f64_t *at, mat_f64_t *a);
 int mat_f64_sum(mat_f64_t *c, mat_f64_t *a, mat_f64_t *b);
 int mat_f64_add(mat_f64_t *c, mat_f64_t *a, double l);
 int mat_f64_product(mat_f64_t *c, mat_f64_t *a, mat_f64_t *b);
@@ -70,6 +62,7 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #define MAT_DESTROY(...) mat_f32_destroy(__VA_ARGS__)
 #define MAT_COPY(...) mat_f32_copy(__VA_ARGS__)
 #define MAT_ZEROS(...) mat_f32_zeros(__VA_ARGS__)
+#define MAT_TRANS(...) mat_f32_transpose(__VA_ARGS__)
 #define MAT_SUM(...) mat_f32_sum(__VA_ARGS__)
 #define MAT_ADD(...) mat_f32_add(__VA_ARGS__)
 #define MAT_PRODUCT(...) mat_f32_product(__VA_ARGS__)
@@ -83,6 +76,7 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
 #define MAT_NEW(...) mat_f64_new(__VA_ARGS__)
 #define MAT_DESTROY(...) mat_f64_destroy(__VA_ARGS__)
 #define MAT_ZEROS(...) mat_f64_zeros(__VA_ARGS__)
+#define MAT_TRANS(...) mat_f64_transpose(__VA_ARGS__)
 #define MAT_SUM(...) mat_f64_sum(__VA_ARGS__)
 #define MAT_ADD(...) mat_f64_add(__VA_ARGS__)
 #define MAT_PRODUCT(...) mat_f64_product(__VA_ARGS__)

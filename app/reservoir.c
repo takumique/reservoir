@@ -132,8 +132,12 @@ static void _get_next_node_state(reservoir_t *res, MAT_T *temp, MAT_T *next, MAT
 // heap: n_res_nodes * n_data + n_res_nodes * n_res_nodes + n_res_nodes * n_in_nodes
 int train_feed_data(reservoir_t *res, MAT_T *data) {
   int ret = 0;
-  MAT_T res_nodes, x, y;
+  MAT_T res_nodes, res_nodes_t, x, y;
   if(MAT_NEW(res->mem, &res_nodes, data->n + 1, res->n_res_nodes) < 0) {
+    ret = -1;
+    goto oom_fail;
+  }
+  if(MAT_NEW(res->mem, &res_nodes_t, res->n_res_nodes, data->n) < 0) {
     ret = -1;
     goto oom_fail;
   }
@@ -164,14 +168,11 @@ int train_feed_data(reservoir_t *res, MAT_T *data) {
   res_nodes.data += res->n_res_nodes;
   res_nodes.n -= 1;
   // update (X X_T) as x = (X_T X) in case of column major
-  MAT_T _res_nodes_t;
-  MAT_NEW(NULL, &_res_nodes_t, res_nodes.n, res_nodes.m);
-  _res_nodes_t.data = res_nodes.data;
-  T(_res_nodes_t);
-  MAT_PRODUCT(&x, &_res_nodes_t, &res_nodes);
+  MAT_TRANS(&res_nodes_t, &res_nodes);
+  MAT_PRODUCT(&x, &res_nodes_t, &res_nodes);
   MAT_SUM(&res->x, &res->x, &x);
   // update (Y_TARGET X_T) as y = (X_T Y_TARGET) in case of column major
-  MAT_PRODUCT(&y, &_res_nodes_t, data);
+  MAT_PRODUCT(&y, &res_nodes_t, data);
   MAT_SUM(&res->y, &res->y, &y);
   // rewind one
   res_nodes.data -= res->n_res_nodes;
@@ -180,6 +181,7 @@ int train_feed_data(reservoir_t *res, MAT_T *data) {
   memcpy(res->res_nodes.data, res_nodes.data + res->n_res_nodes * data->n, sizeof(VAL_T) * res->n_res_nodes);
 oom_fail:
   MAT_DESTROY(res->mem, &res_nodes);
+  MAT_DESTROY(res->mem, &res_nodes_t);
   MAT_DESTROY(res->mem, &x);
   MAT_DESTROY(res->mem, &y);
   return ret;

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CHECK_ARGS
+//#define CHECK_ARGS
 
 int mat_f32_new(mat_memory_t *mem, mat_f32_t *a, unsigned n, unsigned m) {
   a->t = 0;
@@ -35,6 +35,22 @@ int mat_f32_copy(mat_f32_t *dst, mat_f32_t *src) {
 
 int mat_f32_zeros(mat_f32_t *a) {
   memset(a->data, 0, sizeof(f32_t) * a->n * a->m);
+  return 0;
+}
+
+int mat_f32_transpose(mat_f32_t *at, mat_f32_t *a) {
+#ifdef CHECK_ARGS
+  if(at->n != a->m) {
+    return -1;
+  }
+  if(at->m != a->n) {
+    return -1;
+  }
+#endif
+  mat_f32_copy(at, a);
+  at->t = !a->t;
+  at->n = a->m;
+  at->m = a->n;
   return 0;
 }
 
@@ -341,6 +357,22 @@ int mat_f64_zeros(mat_f64_t *a) {
   return 0;
 }
 
+int mat_f64_transpose(mat_f64_t *at, mat_f64_t *a) {
+#ifdef CHECK_ARGS
+  if(at->n != a->m) {
+    return -1;
+  }
+  if(at->m != a->n) {
+    return -1;
+  }
+#endif
+  mat_f64_copy(at, a);
+  at->t = !a->t;
+  at->n = a->m;
+  at->m = a->n;
+  return 0;
+}
+
 int mat_f64_sum(mat_f64_t *c, mat_f64_t *a, mat_f64_t *b) {
 #ifdef CHECK_ARGS
   if(c->n != a->n) {
@@ -609,3 +641,99 @@ double mat_f64_max_abs_eigenval(mat_f64_t *a, mat_f64_t *x, mat_f64_t *y, unsign
   }
   return lambda;
 }
+
+#if 0
+#include <stdio.h>
+#include <stdlib.h>
+void main() {
+  mat_memory_t mat_support = {
+      .memory_alloc = (void *(*)(unsigned)) malloc,
+      .memory_free = (void (*)(void *)) free,
+  };
+  mat_f32_t a;
+  if(mat_f32_new(&mat_support, &a, 2, 2) != 0) {
+    printf("mat_f32_new failed\n");
+    return;
+  }
+  *MAT(a, 0, 0) = 1;
+  *MAT(a, 0, 1) = 2;
+  *MAT(a, 1, 0) = 3;
+  *MAT(a, 1, 1) = 4;
+  mat_f32_t b;
+  if(mat_f32_new(&mat_support, &b, 2, 3) != 0) {
+    printf("mat_f32_new failed\n");
+    return;
+  }
+  *MAT(b, 0, 0) = 5;
+  *MAT(b, 0, 1) = 6;
+  *MAT(b, 0, 2) = 7;
+  *MAT(b, 1, 0) = 8;
+  *MAT(b, 1, 1) = 9;
+  *MAT(b, 1, 2) = 10;
+  mat_f32_t c;
+  if(mat_f32_new(&mat_support, &c, 2, 3) != 0) {
+    printf("mat_f32_new failed\n");
+    return;
+  }
+  mat_f32_t d;
+  if(mat_f32_new(&mat_support, &d, 3, 2) != 0) {
+    printf("mat_f32_new failed\n");
+    return;
+  }
+
+  // c = a @ b
+  printf("c = a @ b\n");
+  if(mat_f32_product(&c, &a, &b) != 0) {
+    printf("mat_f32_product failed\n");
+    return;
+  }
+  // expected:
+  // [[21 24 27]
+  //  [47 54 61]]
+  printf("%f %f %f \n%f %f %f \n",
+      *MAT(c, 0, 0),
+      *MAT(c, 0, 1),
+      *MAT(c, 0, 2),
+      *MAT(c, 1, 0),
+      *MAT(c, 1, 1),
+      *MAT(c, 1, 2));
+
+  // c = a.T @ b
+  printf("c = a.T @ b\n");
+  T(a);
+  if(mat_f32_product(&c, &a, &b) != 0) {
+    printf("mat_f32_product failed\n");
+    return;
+  }
+  T(a);
+  // expected:
+  // [[29 33 37]
+  //  [42 48 54]]
+  printf("%f %f %f \n%f %f %f \n",
+      *MAT(c, 0, 0),
+      *MAT(c, 0, 1),
+      *MAT(c, 0, 2),
+      *MAT(c, 1, 0),
+      *MAT(c, 1, 1),
+      *MAT(c, 1, 2));
+
+  // d = b.T @ a
+  printf("d = b.T @ a\n");
+  T(b);
+  if(mat_f32_product(&d, &b, &a) != 0) {
+    printf("mat_f32_product failed\n");
+    return;
+  }
+  // expected:
+  // [[29 42]
+  //  [33 48]
+  //  [37 54]]
+  printf("%f %f \n%f %f \n%f %f \n",
+      *MAT(d, 0, 0),
+      *MAT(d, 0, 1),
+      *MAT(d, 1, 0),
+      *MAT(d, 1, 1),
+      *MAT(d, 2, 0),
+      *MAT(d, 2, 1));
+}
+#endif

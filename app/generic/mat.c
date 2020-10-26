@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CHECK_ARGS
+//#define CHECK_ARGS
 
 int mat_f32_new(mat_memory_t *mem, mat_f32_t *a, unsigned n, unsigned m) {
   a->t = 0;
@@ -35,6 +35,22 @@ int mat_f32_copy(mat_f32_t *dst, mat_f32_t *src) {
 
 int mat_f32_zeros(mat_f32_t *a) {
   memset(a->data, 0, sizeof(f32_t) * a->n * a->m);
+  return 0;
+}
+
+int mat_f32_transpose(mat_f32_t *at, mat_f32_t *a) {
+#ifdef CHECK_ARGS
+  if(at->n != a->m) {
+    return -1;
+  }
+  if(at->m != a->n) {
+    return -1;
+  }
+#endif
+  mat_f32_copy(at, a);
+  at->t = !a->t;
+  at->n = a->m;
+  at->m = a->n;
   return 0;
 }
 
@@ -338,6 +354,22 @@ int mat_f64_copy(mat_f64_t *dst, mat_f64_t *src) {
 
 int mat_f64_zeros(mat_f64_t *a) {
   memset(a->data, 0, sizeof(f64_t) * a->n * a->m);
+  return 0;
+}
+
+int mat_f64_transpose(mat_f64_t *at, mat_f64_t *a) {
+#ifdef CHECK_ARGS
+  if(at->n != a->m) {
+    return -1;
+  }
+  if(at->m != a->n) {
+    return -1;
+  }
+#endif
+  mat_f64_copy(at, a);
+  at->t = !a->t;
+  at->n = a->m;
+  at->m = a->n;
   return 0;
 }
 
