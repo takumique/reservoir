@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   reservoir_t res = {
       .mem = &mem,
       .n_in_nodes = 1,
-      .n_res_nodes = 150,
+      .n_res_nodes = 100,
       .n_out_nodes = 1,
       .leak_rate = 0.02f,
   };

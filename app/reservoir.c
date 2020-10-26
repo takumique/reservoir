@@ -1,5 +1,10 @@
 #include "reservoir.h"
 
+#ifdef CONST_WEIGHTS
+extern const VAL_T __in_weights[];
+extern const VAL_T __res_weights[];
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -34,16 +39,28 @@ static void _init_xy(reservoir_t *res) {
 }
 
 int init(reservoir_t *res) {
+#ifndef CONST_WEIGHTS
   MAT_T temp1, temp2;
+#endif
+#ifndef CONST_WEIGHTS
   if(MAT_NEW(res->mem, &res->in_weights, res->n_in_nodes, res->n_res_nodes) < 0) {
     goto oom_fail;
   }
+#else
+  MAT_NEW(NULL, &res->in_weights, res->n_in_nodes, res->n_res_nodes);
+  res->in_weights.data = (VAL_T *) __in_weights;
+#endif
   if(MAT_NEW(res->mem, &res->res_nodes, 1, res->n_res_nodes) < 0) {
     goto oom_fail;
   }
+#ifndef CONST_WEIGHTS
   if(MAT_NEW(res->mem, &res->res_weights, res->n_res_nodes, res->n_res_nodes) < 0) {
     goto oom_fail;
   }
+#else
+  MAT_NEW(NULL, &res->res_weights, res->n_res_nodes, res->n_res_nodes);
+  res->res_weights.data = (VAL_T *) __res_weights;
+#endif
   if(MAT_NEW(res->mem, &res->out_weights, res->n_res_nodes, res->n_out_nodes) < 0) {
     goto oom_fail;
   }
@@ -55,24 +72,32 @@ int init(reservoir_t *res) {
   }
   srandom(0);
   // initialize in_weights
+#ifndef CONST_WEIGHTS
   _init_in_weights(res);
+#endif
   // initialize res_nodes
   MAT_ZEROS(&res->res_nodes);
   // initialize res_weights
+#ifndef CONST_WEIGHTS
   MAT_NEW(NULL, &temp1, 1, res->n_res_nodes);
   temp1.data = res->x.data;
   MAT_NEW(NULL, &temp2, 1, res->n_res_nodes);
   temp2.data = res->y.data;
   _init_res_weights(res, &temp1, &temp2);
+#endif
   // out_weights
   MAT_ZEROS(&res->out_weights);
   // x and y
   _init_xy(res);
   return 0;
 oom_fail:
+#ifndef CONST_WEIGHTS
   MAT_DESTROY(res->mem, &res->in_weights);
+#endif
   MAT_DESTROY(res->mem, &res->res_nodes);
+#ifndef CONST_WEIGHTS
   MAT_DESTROY(res->mem, &res->res_weights);
+#endif
   MAT_DESTROY(res->mem, &res->out_weights);
   MAT_DESTROY(res->mem, &res->x);
   MAT_DESTROY(res->mem, &res->y);
@@ -80,9 +105,13 @@ oom_fail:
 }
 
 void deinit(reservoir_t *res) {
+#ifndef CONST_WEIGHTS
   MAT_DESTROY(res->mem, &res->in_weights);
+#endif
   MAT_DESTROY(res->mem, &res->res_nodes);
+#ifndef CONST_WEIGHTS
   MAT_DESTROY(res->mem, &res->res_weights);
+#endif
   MAT_DESTROY(res->mem, &res->out_weights);
   MAT_DESTROY(res->mem, &res->x);
   MAT_DESTROY(res->mem, &res->y);

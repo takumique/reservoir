@@ -59,4 +59,7 @@ case $BUILD_TARGET in
   generic)
     cmake_build $TOP $BUILD_TARGET $BUILD_MODE
     ;;
+  stm32*)
+    ./build.$BUILD_TARGET.sh
+    ;;
 esac
