@@ -1,8 +1,10 @@
 #ifndef APP_GENERIC_MAT_H_
 #define APP_GENERIC_MAT_H_
 
-typedef float f32_t;
-typedef double f64_t;
+#include <arm_math.h>
+
+typedef float32_t f32_t;
+typedef float64_t f64_t;
 
 typedef struct {
   void *(*memory_alloc)(unsigned);

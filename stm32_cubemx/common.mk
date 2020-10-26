@@ -12,3 +12,9 @@ C_INCLUDES += \
 
 LDFLAGS += \
 -u _printf_float
+
+LIBS += \
+-larm_cortexM4lf_math
+
+LIBDIR += \
+-LDrivers/CMSIS/DSP/Lib/GCC
