@@ -1,5 +1,5 @@
-#ifndef APP_CMCIS_APPLICATION_LOG_H_
-#define APP_CMCIS_APPLICATION_LOG_H_
+#ifndef APP_CMSIS_APPLICATION_LOG_H_
+#define APP_CMSIS_APPLICATION_LOG_H_
 
 #include <string.h>
 #include <stdio.h>
@@ -19,4 +19,4 @@ do { \
   _log(_buf); \
 } while(0)
 
-#endif /* APP_CMCIS_APPLICATION_LOG_H_ */
+#endif /* APP_CMSIS_APPLICATION_LOG_H_ */

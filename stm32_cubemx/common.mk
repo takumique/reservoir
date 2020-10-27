@@ -1,6 +1,6 @@
 C_SOURCES += \
 $(wildcard $(APP_PATH)/*.c) \
-$(wildcard $(APP_PATH)/cmcis/*.c)
+$(wildcard $(APP_PATH)/cmsis/*.c)
 
 C_DEFS += \
 -DPRECISION_F32 \
@@ -8,7 +8,7 @@ C_DEFS += \
 
 C_INCLUDES += \
 -I$(APP_PATH) \
--I$(APP_PATH)/cmcis
+-I$(APP_PATH)/cmsis
 
 LDFLAGS += \
 -u _printf_float
