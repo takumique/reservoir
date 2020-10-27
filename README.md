@@ -14,14 +14,14 @@ Run following command to run:
 ```
 ./out.generic/app/reservoir
 ```
-Make sure training.txt is in your current directory. predict.txt is generated in your current directory.  
+Make sure training.txt is in your current directory. predict.txt is generated in your current directory when execution is done.  
 
 ### STM32 MCU
 Run following command to build:
 ```
 ./build.sh -t <target device>
 ```
-Currently only supported target device is "stm32_nucleo_l476rg" . The build artifacts are generated under stm32_cubemx/<target device>/build directory.  
+Currently only supported target device is "stm32_nucleo_l476rg" . The build artifacts are generated under stm32_cubemx/nucleo_l476rgbuild directory.  
 Run following command to flash:
 ```
 st-flash --format ihex write ./stm32_cubemx/nucleo_l476rg/build/nucleo_l476rg.hex
