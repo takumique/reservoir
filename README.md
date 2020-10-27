@@ -3,7 +3,7 @@ This project is to translate [this example](https://qiita.com/pokotsun/items/dd8
 ## Getting started
 ### Prerequisite packages
 ```
-sudo apt install -y cmake
+sudo apt install -y cmake build-essential gcc-arm-none-eabi
 ```
 ### Linux machine
 Run following command to build:
